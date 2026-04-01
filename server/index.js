@@ -7,6 +7,7 @@ import { dirname, join } from 'path';
 import { DeviceManager } from './services/device.js';
 import { setupWSHandler } from './services/ws.js';
 import apiRouter from './routes/api.js';
+import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
