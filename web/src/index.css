@@ -1,0 +1,79 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f0f2f5;
+  color: #333;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.ant-layout {
+  min-height: 100vh;
+}
+
+.device-card {
+  margin-bottom: 16px;
+  transition: all 0.3s;
+}
+
+.device-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-online {
+  background: #52c41a;
+  box-shadow: 0 0 6px #52c41a;
+}
+
+.status-offline {
+  background: #ff4d4f;
+}
+
+.status-error {
+  background: #faad14;
+}
+
+.vnc-container {
+  width: 100%;
+  height: calc(100vh - 200px);
+  min-height: 400px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.vnc-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.metric-card {
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1890ff;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #999;
+}
