@@ -80,6 +80,17 @@ export function setupWSHandler(wss, deviceManager) {
       event: DEVICE_EVENTS.ONLINE,
       device: { id: device.id, name: device.name, host: device.host }
     });
+    // 立刻把最新的设备列表也广播一次（前端 fetch 不到 mDNS 实时）
+    broadcast(wss, { type: MSG_TYPES.DEVICE_LIST, data: deviceManager.getDevices() });
+  });
+
+  deviceManager.on('device:removed', (device) => {
+    broadcast(wss, {
+      type: MSG_TYPES.DEVICE_EVENT,
+      event: DEVICE_EVENTS.OFFLINE,
+      device: { id: device.id }
+    });
+    broadcast(wss, { type: MSG_TYPES.DEVICE_LIST, data: deviceManager.getDevices() });
   });
 
   deviceManager.on('status:refreshed', (devices) => {
@@ -87,6 +98,7 @@ export function setupWSHandler(wss, deviceManager) {
       type: MSG_TYPES.DEVICE_STATUS,
       devices
     });
+    broadcast(wss, { type: MSG_TYPES.DEVICE_LIST, data: devices });
   });
 
   deviceManager.on('device:project-switched', ({ device, project }) => {
@@ -96,6 +108,11 @@ export function setupWSHandler(wss, deviceManager) {
       device: device.id,
       project
     });
+  });
+
+  // 操作日志实时推送
+  deviceManager.on('op:logged', (entry) => {
+    broadcast(wss, { type: 'op_logged', entry });
   });
 }
 

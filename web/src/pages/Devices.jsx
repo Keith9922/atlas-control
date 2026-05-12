@@ -1,97 +1,53 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Table, Button, Space, Tag, Modal, Form, Input, message, Popconfirm } from 'antd';
-import { PlusOutlined, DeleteOutlined, ReloadOutlined, DesktopOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined, DeleteOutlined, ReloadOutlined, DesktopOutlined, EyeOutlined,
+  PoweroffOutlined
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-
-const API_BASE = `http://${window.location.host}/api`;
+import { useDevices } from '../hooks/useDevices';
+import { call } from '../utils/api';
 
 export default function Devices() {
   const navigate = useNavigate();
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { devices } = useDevices();
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
 
-  const fetchDevices = async () => {
-    setLoading(true);
-    try {
-      const resp = await fetch(`${API_BASE}/devices`);
-      const data = await resp.json();
-      if (data.success) {
-        setDevices(data.data);
-      }
-    } catch (err) {
-      message.error('获取设备列表失败');
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchDevices();
-    const interval = setInterval(fetchDevices, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleAdd = async (values) => {
-    try {
-      const resp = await fetch(`${API_BASE}/devices/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values)
-      });
-      const data = await resp.json();
-      if (data.success) {
-        message.success('设备添加成功');
-        setModalVisible(false);
-        form.resetFields();
-        fetchDevices();
-      } else {
-        message.error(data.error);
-      }
-    } catch (err) {
-      message.error('添加设备失败');
+    const r = await call('post', '/devices/add', values);
+    if (r.ok) {
+      message.success('已添加');
+      setModalVisible(false);
+      form.resetFields();
+    } else {
+      message.error(r.error);
     }
   };
 
   const handleDelete = async (id) => {
-    try {
-      const resp = await fetch(`${API_BASE}/devices/${id}`, { method: 'DELETE' });
-      const data = await resp.json();
-      if (data.success) {
-        message.success('设备已移除');
-        fetchDevices();
-      }
-    } catch (err) {
-      message.error('移除设备失败');
-    }
+    const r = await call('delete', `/devices/${id}`);
+    message[r.ok ? 'success' : 'error'](r.ok ? '已移除' : r.error);
   };
 
   const columns = [
     {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
+      title: '名称', dataIndex: 'name', key: 'name',
       render: (text, record) => (
-        <Space>
-          <DesktopOutlined />
-          {text}
-        </Space>
+        <a onClick={() => navigate(`/device/${record.id}`)}>
+          <Space>
+            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
+              background: record.status === 'online' ? '#52c41a' : '#ff4d4f' }} />
+            <DesktopOutlined />
+            {text}
+          </Space>
+        </a>
       )
     },
+    { title: 'IP / Host', dataIndex: 'host', key: 'host' },
+    { title: '端口', dataIndex: 'port', key: 'port', width: 80 },
     {
-      title: '主机',
-      dataIndex: 'host',
-      key: 'host'
-    },
-    {
-      title: '端口',
-      dataIndex: 'port',
-      key: 'port'
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
+      title: '状态', dataIndex: 'status', key: 'status', width: 80,
       render: (status) => (
         <Tag color={status === 'online' ? 'green' : 'red'}>
           {status === 'online' ? '在线' : '离线'}
@@ -99,26 +55,33 @@ export default function Devices() {
       )
     },
     {
-      title: '当前项目',
-      dataIndex: ['info', 'current_project'],
-      key: 'project',
-      render: (project) => project || '-'
+      title: '当前项目', dataIndex: ['info', 'current_project'], key: 'project',
+      render: (project) => project ? <Tag color="blue">{project}</Tag> : <span style={{ color: '#bbb' }}>-</span>
     },
     {
-      title: '操作',
-      key: 'action',
+      title: 'CPU / 内存', key: 'usage', width: 140,
+      render: (_, row) => {
+        const info = row.info || {};
+        return <span style={{ fontFamily: 'ui-monospace,monospace', fontSize: 12 }}>
+          {(info.cpu || 0).toFixed(0)}% / {(info.memory || 0).toFixed(0)}%
+        </span>;
+      }
+    },
+    {
+      title: '操作', key: 'action', width: 240,
       render: (_, record) => (
         <Space>
-          <Button size="small" onClick={() => navigate(`/vnc/${record.id}`)}>
+          <Button size="small" icon={<EyeOutlined />} onClick={() => navigate(`/device/${record.id}`)}>
             查看
           </Button>
-          <Popconfirm
-            title="确定移除此设备？"
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <Button size="small" danger icon={<DeleteOutlined />}>
-              移除
-            </Button>
+          <Popconfirm title="重启此设备？" onConfirm={async () => {
+            const r = await call('post', `/devices/${record.id}/reboot`);
+            message[r.ok ? 'success' : 'error'](r.ok ? r.message : r.error);
+          }}>
+            <Button size="small" danger icon={<ReloadOutlined />}>重启</Button>
+          </Popconfirm>
+          <Popconfirm title="从列表移除此设备？" onConfirm={() => handleDelete(record.id)}>
+            <Button size="small" icon={<DeleteOutlined />}>移除</Button>
           </Popconfirm>
         </Space>
       )
@@ -130,41 +93,30 @@ export default function Devices() {
       <div style={{ marginBottom: 16 }}>
         <Space>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-            添加设备
+            手动添加
           </Button>
-          <Button icon={<ReloadOutlined />} onClick={fetchDevices}>
-            刷新
-          </Button>
+          <span style={{ color: '#999', fontSize: 12 }}>
+            mDNS 会自动发现局域网内的盒子，一般不用手动添加
+          </span>
         </Space>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={devices}
-        rowKey="id"
-        loading={loading}
-      />
+      <Table columns={columns} dataSource={devices} rowKey="id" pagination={false} />
 
-      <Modal
-        title="添加设备"
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-      >
+      <Modal title="手动添加设备" open={modalVisible}
+        onCancel={() => setModalVisible(false)} footer={null}>
         <Form form={form} onFinish={handleAdd} layout="vertical">
           <Form.Item name="name" label="设备名称" rules={[{ required: true }]}>
-            <Input placeholder="如: atlas-1" />
+            <Input placeholder="如 atlas-1" />
           </Form.Item>
           <Form.Item name="host" label="主机地址" rules={[{ required: true }]}>
-            <Input placeholder="如: 192.168.1.100 或 atlas-1.local" />
+            <Input placeholder="192.168.x.x 或 *.local" />
           </Form.Item>
           <Form.Item name="port" label="端口" initialValue={8080}>
             <Input type="number" />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              添加
-            </Button>
+            <Button type="primary" htmlType="submit" block>添加</Button>
           </Form.Item>
         </Form>
       </Modal>

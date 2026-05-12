@@ -4,8 +4,10 @@ import { Layout } from 'antd';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Devices from './pages/Devices';
-import VNCViewer from './pages/VNCViewer';
+import DeviceDetail from './pages/DeviceDetail';
 import Projects from './pages/Projects';
+import Operations from './pages/Operations';
+import VNCViewer from './pages/VNCViewer';
 
 const { Header, Content } = Layout;
 
@@ -21,8 +23,10 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/devices" element={<Devices />} />
+            <Route path="/device/:deviceId" element={<DeviceDetail />} />
             <Route path="/vnc/:deviceId" element={<VNCViewer />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/operations" element={<Operations />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Content>
