@@ -52,16 +52,16 @@ export default function TrendChart({ data = [], height = 60, label = '' }) {
     drawSeries('cpu', '#1890ff');
     drawSeries('memory', '#52c41a');
 
-    // 当前值
+    // 当前值（CPU 蓝, 内存 绿；用中文标签）
     const last = data[data.length - 1] || {};
-    ctx.fillStyle = '#666';
-    ctx.font = '10px ui-monospace, monospace';
-    ctx.fillText(`CPU ${(last.cpu || 0).toFixed(0)}%`, pad + 2, 14);
+    ctx.font = '11px "PingFang SC","Microsoft YaHei",ui-sans-serif,system-ui';
+    ctx.fillStyle = '#1890ff';
+    ctx.fillText(`CPU ${(last.cpu || 0).toFixed(0)}%`, pad + 2, 12);
     ctx.fillStyle = '#52c41a';
-    ctx.fillText(`MEM ${(last.memory || 0).toFixed(0)}%`, pad + 70, 14);
+    ctx.fillText(`内存 ${(last.memory || 0).toFixed(0)}%`, pad + 72, 12);
     if (label) {
       ctx.fillStyle = '#999';
-      ctx.fillText(label, cssW - 60, 14);
+      ctx.fillText(label, cssW - 60, 12);
     }
   }, [data, height, label]);
 

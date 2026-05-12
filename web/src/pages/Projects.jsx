@@ -165,7 +165,8 @@ export default function Projects() {
           columns={columns}
           dataSource={rows}
           size="small"
-          pagination={{ pageSize: 20 }}
+          pagination={{ pageSize: 20, hideOnSinglePage: true }}
+          scroll={{ x: 720 }}
           locale={{ emptyText: '没有任何项目 — 用下面的"快捷部署"上传一个' }}
         />
       </Card>
@@ -185,7 +186,7 @@ export default function Projects() {
 
         <Form layout="vertical">
           <Form.Item label="部署到">
-            <Select value={batchTarget} onChange={setBatchTarget} style={{ width: 320 }}>
+            <Select value={batchTarget} onChange={setBatchTarget} style={{ width: '100%', maxWidth: 320 }}>
               <Select.Option value="all">📡 所有设备 ({devices.length} 台)</Select.Option>
               {devices.map(d => (
                 <Select.Option key={d.id} value={d.id}>
